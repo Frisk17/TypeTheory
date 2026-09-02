@@ -3,7 +3,7 @@ public import TypeTheory.Untyped.Lambda.LocallyNameless.Beta
 
 namespace Term
 
-public section
+section
 
 variable [Infinite V] [DecidableEq V]
 
@@ -20,7 +20,7 @@ inductive βPStep : Term V → Term V → Prop where
     (ht_step : βPStep t t') :
       βPStep (app (abs s) t) (s'.openTerm t')
 
-infix:59 " →ₚ " => βPStep
+local infix:59 " →ₚ " => βPStep
 
 @[grind .]
 lemma βPStep_refl {t : Term V} (ht : t.LC) : t →ₚ t := βPStep.refl t ht
@@ -370,7 +370,7 @@ lemma βPStep_of_βStep {t t' : Term V}
 
 abbrev βPReduces : Term V → Term V → Prop := Relation.ReflTransGen βPStep
 
-infix:59 " →ₚ* " => βPReduces
+local infix:59 " →ₚ* " => βPReduces
 
 @[grind .]
 lemma βPReduces_refl (t : Term V) : t →ₚ* t := Relation.ReflTransGen.refl
@@ -408,9 +408,15 @@ lemma βPReduces_iff_βReduces {t t' : Term V} : t →ₚ* t' ↔ t →β* t' :=
 lemma βPReduces_eq_βReduces : βPReduces = (@βReduces V _ _) := by
   ext; simp [βPReduces_iff_βReduces]
 
+end
+
+public section
+
+variable [Infinite V] [DecidableEq V]
+
 abbrev Diamond (r : α → α → Prop) := ∀ a b c, r a b ∧ r a c → ∃ d, r b d ∧ r c d
 
-lemma βPStep_diamond : Diamond (@βPStep V (by assumption) (by assumption)) := by
+private lemma βPStep_diamond : Diamond (@βPStep V (by assumption) (by assumption)) := by
   intro a b c ⟨ h0, h1 ⟩
   apply βPStep_diamond' (s := a) (t := b) (t' := c) h0 h1
 
@@ -426,7 +432,7 @@ private lemma diamond_ReflTransGen_step_of_diamond
     have ⟨ d', ⟨ hcd', h ⟩ ⟩ := hr c' c d (by grind)
     use d'; grind
 
-lemma diamond_ReflTransGen_of_diamond (hr : Diamond r) :
+private lemma diamond_ReflTransGen_of_diamond (hr : Diamond r) :
     Diamond (Relation.ReflTransGen r) := by
   intro a b c ⟨ hab, hac ⟩
   induction hac with
@@ -442,11 +448,12 @@ lemma diamond_ReflTransGen_of_diamond (hr : Diamond r) :
         r _ _ := hd'e 
     · trivial
 
-lemma diamond_βPReduces : Diamond (@βPReduces V _ _) := by
+private lemma diamond_βPReduces : Diamond (@βPReduces V _ _) := by
   apply diamond_ReflTransGen_of_diamond
   apply βPStep_diamond
 
-lemma diamond_βReduces : Diamond (@βReduces V _ _) := by
+
+public theorem diamond_βReduces : Diamond (@βReduces V _ _) := by
   rw [←βPReduces_eq_βReduces]
   apply diamond_βPReduces
 
